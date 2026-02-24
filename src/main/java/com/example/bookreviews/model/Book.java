@@ -7,20 +7,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "books") // Имя таблицы в базе данных
+@Table(name = "books")
 public class Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;       // Название
-    private String author;      // Автор
-    private String description; // Описание
-    private String isbn;        // Уникальный код книги
+    private String title;
+    private String author;
+    private String description;
+    private String isbn;
 
     public Book() {
-        // Пустой конструктор обязателен для JPA
     }
 
     public Book(String title, String author, String description, String isbn) {
@@ -30,7 +29,6 @@ public class Book {
         this.isbn = isbn;
     }
 
-    // Геттеры и Сеттеры (чтобы доставать и менять данные)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

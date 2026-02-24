@@ -6,7 +6,6 @@ public class BookDto {
     private String author;
     private String description;
 
-    // Конструктор
     public BookDto(Long id, String title, String author, String description) {
         this.id = id;
         this.title = title;
@@ -14,7 +13,6 @@ public class BookDto {
         this.description = description;
     }
 
-    // Геттеры
     public Long getId() { return id; }
     public String getTitle() { return title; }
     public String getAuthor() { return author; }

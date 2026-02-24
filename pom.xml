@@ -22,26 +22,22 @@
     </properties>
 
     <dependencies>
-        <!-- 1. WEB: Чтобы создавать контроллеры и REST API -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- 2. JPA: Чтобы работать с Базой Данных -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- 3. H2: База данных в памяти (для тестов) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Тесты (автоматически добавляются) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -56,15 +52,14 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
-            <!-- Тот самый Checkstyle, который просил преподаватель -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>3.3.1</version>
                 <configuration>
-                    <configLocation>sun_checks.xml</configLocation> <!-- Стандартные настройки стиля -->
+                    <configLocation>sun_checks.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
-                    <failsOnError>false</failsOnError> <!-- Не ломать сборку из-за ошибок стиля -->
+                    <failsOnError>false</failsOnError>
                 </configuration>
             </plugin>
         </plugins>

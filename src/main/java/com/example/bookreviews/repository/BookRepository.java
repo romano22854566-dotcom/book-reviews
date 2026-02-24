@@ -7,7 +7,5 @@ import java.util.List;
 
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
-
-    // Спринг сам поймет, что нужно искать по полю Title (игнорируя регистр букв)
     List<Book> findByTitleContainingIgnoreCase(String title);
 }
