@@ -5,8 +5,9 @@ import com.example.bookreviews.model.Book;
 import org.springframework.stereotype.Component;
 
 @Component
-public class BookMapper {
-    public BookDto toDto(Book book) {
+public final class BookMapper {
+
+    public BookDto toDto(final Book book) {
         return new BookDto(
                 book.getId(),
                 book.getTitle(),

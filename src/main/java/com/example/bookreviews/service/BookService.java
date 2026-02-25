@@ -4,22 +4,22 @@ import com.example.bookreviews.dto.BookDto;
 import com.example.bookreviews.mapper.BookMapper;
 import com.example.bookreviews.model.Book;
 import com.example.bookreviews.repository.BookRepository;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
-public class BookService {
+public final class BookService {
 
     private final BookRepository bookRepository;
+
     private final BookMapper bookMapper;
 
-    public BookService(BookRepository bookRepository, BookMapper bookMapper) {
+    public BookService(final BookRepository bookRepository, final BookMapper bookMapper) {
         this.bookRepository = bookRepository;
         this.bookMapper = bookMapper;
     }
 
-    public List<BookDto> findAllBooks(String title) {
+    public List<BookDto> findAllBooks(final String title) {
         List<Book> books;
 
         if (title != null && !title.isEmpty()) {
@@ -32,7 +32,7 @@ public class BookService {
                 .toList();
     }
 
-    public BookDto findBookById(Long id) {
+    public BookDto findBookById(final Long id) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Книга не найдена с id: " + id));
         return bookMapper.toDto(book);
@@ -40,9 +40,16 @@ public class BookService {
 
     public void initData() {
         if (bookRepository.count() == 0) {
-            bookRepository.save(new Book("Clean Code", "Robert Martin", "Programming classic", "978-0132350884"));
-            bookRepository.save(new Book("The Witcher", "Andrzej Sapkowski", "Fantasy novel", "978-0575084841"));
-            bookRepository.save(new Book("Java for Dummies", "Barry Burd", "Good start", "978-1119235552"));
+            bookRepository.save(new Book("Преступление и наказание", "Федор Достоевский",
+                    "Глубокий психологический роман о цене идеи.", "978-5-389-04924-6"));
+
+            bookRepository.save(new Book("Мастер и Маргарита", "Михаил Булгаков",
+                    "Мистическая история, объединяющая древний мир и Москву 30-х.",
+                    "978-5-17-090408-2"));
+
+            bookRepository.save(new Book("Война и мир", "Лев Толстой",
+                    "Великая эпопея о судьбах людей на фоне войны с Наполеоном.",
+                    "978-5-699-12014-7"));
         }
     }
 }
