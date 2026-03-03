@@ -86,8 +86,6 @@ public class DataInitializer implements CommandLineRunner {
                     new Log(Status.SUCCESS, "Загружены книги", admin),
                     new Log(Status.SUCCESS, "Тестовые данные успешно созданы", admin)
             ));
-
-            System.out.println("✅ База данных успешно заполнена 5-ю тестовыми записями для каждой таблицы!");
         }
     }
 }

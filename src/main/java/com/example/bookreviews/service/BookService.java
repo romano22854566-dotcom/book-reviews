@@ -2,11 +2,8 @@ package com.example.bookreviews.service;
 
 import com.example.bookreviews.dto.BookDto;
 import com.example.bookreviews.mapper.BookMapper;
-import com.example.bookreviews.model.Author;
 import com.example.bookreviews.model.Book;
-import com.example.bookreviews.model.Comment;
 import com.example.bookreviews.model.Log;
-import com.example.bookreviews.model.Role;
 import com.example.bookreviews.model.Status;
 import com.example.bookreviews.model.User;
 import com.example.bookreviews.repository.BookRepository;
