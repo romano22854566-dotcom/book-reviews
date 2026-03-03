@@ -12,12 +12,10 @@ import java.util.List;
 public final class BookMapper {
 
     public BookDto toDto(final Book book) {
-        // Достаем имена авторов из объектов Author
         List<String> authorNames = book.getAuthors().stream()
                 .map(Author::getName)
                 .toList();
-
-        // Достаем тексты комментариев из объектов Comment
+        
         List<String> commentTexts = book.getComments().stream()
                 .map(Comment::getText)
                 .toList();

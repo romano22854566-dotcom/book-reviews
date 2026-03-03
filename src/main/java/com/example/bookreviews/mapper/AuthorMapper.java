@@ -10,7 +10,6 @@ import java.util.List;
 @Component
 public final class AuthorMapper {
     public AuthorDto toDto(final Author author) {
-        // Достаем только НАЗВАНИЯ книг, чтобы избежать бесконечного цикла
         List<String> bookTitles = author.getBooks().stream()
                 .map(Book::getTitle)
                 .toList();

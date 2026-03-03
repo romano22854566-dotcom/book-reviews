@@ -11,7 +11,6 @@ import java.util.List;
 public final class UserMapper {
 
     public UserDto toDto(final User user) {
-        // Достаем тексты комментариев
         List<String> commentTexts = user.getComments().stream()
                 .map(Comment::getText)
                 .toList();
