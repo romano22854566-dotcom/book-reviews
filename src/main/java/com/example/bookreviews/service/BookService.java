@@ -73,15 +73,15 @@ public class BookService {
 
     public void demoWithoutTransaction() {
         logRepository.save(new Log(Status.IN_PROGRESS, "Попытка сохранить БЕЗ транзакции"));
-        throw new RuntimeException("Искусственная ошибка БД!");
+        throw new IllegalStateException("Искусственная ошибка БД!");
     }
 
     @Transactional
     public void demoWithTransaction() {
         logRepository.save(new Log(Status.IN_PROGRESS, "Попытка сохранить С транзакцией"));
-        throw new RuntimeException("Искусственная ошибка БД!");
+        throw new IllegalStateException("Искусственная ошибка БД!");
     }
-    
+
     public void initData() {
         if (bookRepository.count() == 0) {
             Author dostoevsky = new Author("Федор Достоевский");
