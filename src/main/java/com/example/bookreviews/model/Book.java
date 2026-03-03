@@ -1,10 +1,19 @@
 package com.example.bookreviews.model;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "books")
@@ -14,30 +23,36 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 128, nullable = false)
     private String title;
 
-    private String author;
+    private int pages;
 
-    private String description;
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "book_author",
+            joinColumns = @JoinColumn(name = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "author_id")
+    )
+    private Set<Author> authors = new HashSet<>();
 
-    private String isbn;
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Comment> comments = new HashSet<>();
 
     public Book() {
+
     }
 
-    public Book(final String title, final String author,
-                final String description, final String isbn) {
+    public Book(String title, int pages) {
         this.title = title;
-        this.author = author;
-        this.description = description;
-        this.isbn = isbn;
+        this.pages = pages;
     }
 
     public Long getId() {
         return id;
     }
 
-    public void setId(final Long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -45,18 +60,32 @@ public class Book {
         return title;
     }
 
-
-
-    public String getAuthor() {
-        return author;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-
-    public String getDescription() {
-        return description;
+    public int getPages() {
+        return pages;
     }
 
+    public void setPages(int pages) {
+        this.pages = pages;
+    }
 
+    public Set<Author> getAuthors() {
+        return authors;
 
+    }
 
+    public void setAuthors(Set<Author> authors) {
+        this.authors = authors;
+    }
+
+    public Set<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(Set<Comment> comments) {
+        this.comments = comments;
+    }
 }

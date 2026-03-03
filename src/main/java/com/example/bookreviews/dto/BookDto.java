@@ -1,21 +1,20 @@
 package com.example.bookreviews.dto;
 
+import java.util.List;
+
 public final class BookDto {
+    private final Long id;
+    private final String title;
+    private final int pages;
+    private final List<String> authors;
+    private final List<String> comments;
 
-    private Long id;
-
-    private String title;
-
-    private String author;
-
-    private String description;
-
-    public BookDto(final Long id, final String title,
-                   final String author, final String description) {
+    public BookDto(Long id, String title, int pages, List<String> authors, List<String> comments) {
         this.id = id;
         this.title = title;
-        this.author = author;
-        this.description = description;
+        this.pages = pages;
+        this.authors = authors;
+        this.comments = comments;
     }
 
     public Long getId() {
@@ -26,11 +25,15 @@ public final class BookDto {
         return title;
     }
 
-    public String getAuthor() {
-        return author;
+    public int getPages() {
+        return pages;
     }
 
-    public String getDescription() {
-        return description;
+    public List<String> getAuthors() {
+        return authors;
+    }
+
+    public List<String> getComments() {
+        return comments;
     }
 }
