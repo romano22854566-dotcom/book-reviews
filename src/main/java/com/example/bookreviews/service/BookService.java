@@ -43,8 +43,9 @@ public class BookService {
     public BookDto findBookById(final Long id) {
         return bookRepository.findWithDetailsById(id).map(bookMapper::toDto)
                 .orElseThrow(() -> {
-                    logRepository.save(new Log(Status.FAILURE, "Неудачная попытка найти . ID не существует: " + id));
-                    return new RuntimeException("Книга не найдена с id: " + id);
+                    User admin = userRepository.findById(1L).orElse(null);
+                    logRepository.save(new Log(Status.FAILURE, "Неудачная попытка найти книгу: " + id, admin));
+                    return new IllegalStateException("Книга не найдена с id: " + id);
                 });
     }
 
@@ -52,7 +53,8 @@ public class BookService {
         Book book = new Book(title, pages);
         Book savedBook = bookRepository.save(book);
 
-        logRepository.save(new Log(Status.SUCCESS, "Админ успешно создал новую книгу: " + title));
+        User admin = userRepository.findById(1L).orElse(null);
+        logRepository.save(new Log(Status.SUCCESS, "Успешно создана книга: " + title, admin));
 
         return bookMapper.toDto(savedBook);
     }
@@ -72,13 +74,16 @@ public class BookService {
     }
 
     public void demoWithoutTransaction() {
-        logRepository.save(new Log(Status.IN_PROGRESS, "Попытка сохранить БЕЗ транзакции"));
+        User admin = userRepository.findById(1L).orElse(null);
+        logRepository.save(new Log(Status.IN_PROGRESS, "Попытка сохранить БЕЗ транзакции", admin));
         throw new IllegalStateException("Искусственная ошибка БД!");
     }
 
+
     @Transactional
     public void demoWithTransaction() {
-        logRepository.save(new Log(Status.IN_PROGRESS, "Попытка сохранить С транзакцией"));
+        User admin = userRepository.findById(1L).orElse(null);
+        logRepository.save(new Log(Status.IN_PROGRESS, "Попытка сохранить С транзакцией", admin));
         throw new IllegalStateException("Искусственная ошибка БД!");
     }
 
