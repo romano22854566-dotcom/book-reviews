@@ -86,22 +86,4 @@ public class BookService {
         logRepository.save(new Log(Status.IN_PROGRESS, "Попытка сохранить С транзакцией", admin));
         throw new IllegalStateException("Искусственная ошибка БД!");
     }
-
-    public void initData() {
-        if (bookRepository.count() == 0) {
-            Author dostoevsky = new Author("Федор Достоевский");
-            User admin = new User("Иван_Админ", Role.ADMIN);
-            userRepository.save(admin);
-
-            final int pagesCount = 500;
-            Book book = new Book("Преступление и наказание", pagesCount);
-            book.getAuthors().add(dostoevsky);
-            dostoevsky.getBooks().add(book);
-
-            Comment comment = new Comment("Очень глубокая книга!", book, admin);
-            book.getComments().add(comment);
-
-            bookRepository.save(book);
-        }
-    }
 }

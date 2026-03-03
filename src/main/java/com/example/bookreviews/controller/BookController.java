@@ -21,7 +21,6 @@ public final class BookController {
 
     public BookController(final BookService bookService) {
         this.bookService = bookService;
-        bookService.initData();
     }
 
     @GetMapping
