@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public final class CommentMapper {
+
     public CommentDto toDto(final Comment comment) {
         return new CommentDto(
                 comment.getId(),

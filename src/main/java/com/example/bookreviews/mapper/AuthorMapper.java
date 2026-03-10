@@ -9,6 +9,7 @@ import java.util.List;
 
 @Component
 public final class AuthorMapper {
+
     public AuthorDto toDto(final Author author) {
         List<String> bookTitles = author.getBooks().stream()
                 .map(Book::getTitle)

@@ -2,14 +2,12 @@ package com.example.bookreviews.dto;
 
 import java.util.List;
 
-public record BookDto(
-        Long id,
+public record BookRequest(
         String title,
         int pages,
         Integer publicationYear,
-        List<String> authors,
-        List<String> categories,
-        List<String> comments
+        List<Long> authorIds,
+        List<Long> categoryIds
 ) {
 
 }

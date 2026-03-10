@@ -1,12 +1,17 @@
 package com.example.bookreviews.service;
 
 import com.example.bookreviews.dto.BookDto;
+import com.example.bookreviews.dto.BookRequest;
 import com.example.bookreviews.mapper.BookMapper;
+import com.example.bookreviews.model.Author;
 import com.example.bookreviews.model.Book;
+import com.example.bookreviews.model.Category;
 import com.example.bookreviews.model.Log;
 import com.example.bookreviews.model.Status;
 import com.example.bookreviews.model.User;
+import com.example.bookreviews.repository.AuthorRepository;
 import com.example.bookreviews.repository.BookRepository;
+import com.example.bookreviews.repository.CategoryRepository;
 import com.example.bookreviews.repository.LogRepository;
 import com.example.bookreviews.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -21,13 +26,18 @@ public class BookService {
     private final LogRepository logRepository;
     private final UserRepository userRepository;
     private final BookMapper bookMapper;
+    private final AuthorRepository authorRepository;
+    private final CategoryRepository categoryRepository;
 
     public BookService(final BookRepository bookRepository, final LogRepository logRepository,
-                       final UserRepository userRepository, final BookMapper bookMapper) {
+                       final UserRepository userRepository, final BookMapper bookMapper,
+                       final AuthorRepository authorRepository, final CategoryRepository categoryRepository) {
         this.bookRepository = bookRepository;
         this.logRepository = logRepository;
         this.userRepository = userRepository;
         this.bookMapper = bookMapper;
+        this.authorRepository = authorRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     public List<BookDto> findAllBooks(final String title) {
@@ -46,22 +56,49 @@ public class BookService {
                 });
     }
 
-    public BookDto createBook(final String title, final int pages) {
-        Book book = new Book(title, pages);
+    @Transactional
+    public BookDto createBook(final BookRequest request) {
+        Book book = new Book(request.title(), request.pages(), request.publicationYear());
+
+        if (request.authorIds() != null && !request.authorIds().isEmpty()) {
+            List<Author> authors = authorRepository.findAllById(request.authorIds());
+            book.getAuthors().addAll(authors);
+        }
+
+        if (request.categoryIds() != null && !request.categoryIds().isEmpty()) {
+            List<Category> categories = categoryRepository.findAllById(request.categoryIds());
+            book.getCategories().addAll(categories);
+        }
+
         Book savedBook = bookRepository.save(book);
 
         User admin = userRepository.findById(1L).orElse(null);
-        logRepository.save(new Log(Status.SUCCESS, "Успешно создана книга: " + title, admin));
+        logRepository.save(new Log(Status.SUCCESS, "Успешно создана книга: " + request.title(), admin));
 
         return bookMapper.toDto(savedBook);
     }
 
-    public BookDto updateBook(final Long id, final String title, final int pages) {
+    @Transactional
+    public BookDto updateBook(final Long id, final BookRequest request) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Книга не найдена с id: " + id));
 
-        book.setTitle(title);
-        book.setPages(pages);
+        book.setTitle(request.title());
+        book.setPages(request.pages());
+        book.setPublicationYear(request.publicationYear());
+
+        book.getAuthors().clear();
+        if (request.authorIds() != null && !request.authorIds().isEmpty()) {
+            List<Author> authors = authorRepository.findAllById(request.authorIds());
+            book.getAuthors().addAll(authors);
+        }
+
+        book.getCategories().clear();
+        if (request.categoryIds() != null && !request.categoryIds().isEmpty()) {
+            List<Category> categories = categoryRepository.findAllById(request.categoryIds());
+            book.getCategories().addAll(categories);
+        }
+
         Book updatedBook = bookRepository.save(book);
         return bookMapper.toDto(updatedBook);
     }
@@ -75,7 +112,6 @@ public class BookService {
         logRepository.save(new Log(Status.IN_PROGRESS, "Попытка сохранить БЕЗ транзакции", admin));
         throw new IllegalStateException("Искусственная ошибка БД!");
     }
-
 
     @Transactional
     public void demoWithTransaction() {

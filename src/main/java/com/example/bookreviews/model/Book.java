@@ -28,13 +28,22 @@ public class Book {
 
     private int pages;
 
+    @Column(name = "publication_year")
+    private Integer publicationYear;
+
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "book_author",
             joinColumns = @JoinColumn(name = "book_id"),
-            inverseJoinColumns = @JoinColumn(name = "author_id")
-    )
+            inverseJoinColumns = @JoinColumn(name = "author_id"))
     private Set<Author> authors = new HashSet<>();
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "book_category",
+            joinColumns = @JoinColumn(name = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id"))
+    private Set<Category> categories = new HashSet<>();
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments = new HashSet<>();
@@ -43,9 +52,10 @@ public class Book {
 
     }
 
-    public Book(String title, int pages) {
+    public Book(String title, int pages, Integer publicationYear) {
         this.title = title;
         this.pages = pages;
+        this.publicationYear = publicationYear;
     }
 
     public Long getId() {
@@ -72,13 +82,28 @@ public class Book {
         this.pages = pages;
     }
 
+    public Integer getPublicationYear() {
+        return publicationYear;
+    }
+
+    public void setPublicationYear(Integer publicationYear) {
+        this.publicationYear = publicationYear;
+    }
+
     public Set<Author> getAuthors() {
         return authors;
-
     }
 
     public void setAuthors(Set<Author> authors) {
         this.authors = authors;
+    }
+
+    public Set<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(Set<Category> categories) {
+        this.categories = categories;
     }
 
     public Set<Comment> getComments() {

@@ -11,14 +11,15 @@ import java.util.Optional;
 
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
-    @NonNull
-    @EntityGraph(attributePaths = {"authors", "comments"})
-    List<Book> findAll();
 
-    @EntityGraph(attributePaths = {"authors", "comments"})
+    @NonNull
+    @EntityGraph(attributePaths = {"authors", "comments", "categories"})
+    List<Book> findAllByOrderByIdAsc();
+
+    @EntityGraph(attributePaths = {"authors", "comments", "categories"})
     List<Book> findByTitleContainingIgnoreCase(String title);
 
     @NonNull
-    @EntityGraph(attributePaths = {"authors", "comments"})
+    @EntityGraph(attributePaths = {"authors", "comments", "categories"})
     Optional<Book> findWithDetailsById(Long id);
 }

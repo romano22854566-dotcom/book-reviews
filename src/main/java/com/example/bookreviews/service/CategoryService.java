@@ -1,0 +1,54 @@
+package com.example.bookreviews.service;
+
+import com.example.bookreviews.dto.CategoryDto;
+import com.example.bookreviews.dto.CategoryRequest;
+import com.example.bookreviews.mapper.CategoryMapper;
+import com.example.bookreviews.model.Category;
+import com.example.bookreviews.repository.CategoryRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class CategoryService {
+
+    private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
+
+    public CategoryService(final CategoryRepository categoryRepository, final CategoryMapper categoryMapper) {
+        this.categoryRepository = categoryRepository;
+        this.categoryMapper = categoryMapper;
+    }
+
+    public List<CategoryDto> getAllCategories() {
+        return categoryRepository.findAll().stream()
+                .map(categoryMapper::toDto)
+                .toList();
+    }
+
+    public CategoryDto getCategoryById(final Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Категория не найдена с id: " + id));
+        return categoryMapper.toDto(category);
+    }
+
+    public CategoryDto createCategory(final CategoryRequest request) {
+        Category category = new Category(request.name());
+        Category savedCategory = categoryRepository.save(category);
+        return categoryMapper.toDto(savedCategory);
+    }
+
+    public CategoryDto updateCategory(final Long id, final CategoryRequest request) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Категория не найдена с id: " + id));
+
+        category.setName(request.name());
+        Category updatedCategory = categoryRepository.save(category);
+
+        return categoryMapper.toDto(updatedCategory);
+    }
+
+    public void deleteCategory(final Long id) {
+        categoryRepository.deleteById(id);
+    }
+}

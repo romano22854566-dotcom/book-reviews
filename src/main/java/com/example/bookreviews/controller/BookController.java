@@ -1,12 +1,14 @@
 package com.example.bookreviews.controller;
 
 import com.example.bookreviews.dto.BookDto;
+import com.example.bookreviews.dto.BookRequest;
 import com.example.bookreviews.service.BookService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/books")
+@RequestMapping("/books") // Не забывай, что в Postman из-за application.properties это будет /api/books
 public final class BookController {
 
     private final BookService bookService;
@@ -34,15 +36,13 @@ public final class BookController {
     }
 
     @PostMapping
-    public BookDto createBook(@RequestParam final String title, @RequestParam final int pages) {
-        return bookService.createBook(title, pages);
+    public BookDto createBook(@RequestBody final BookRequest request) {
+        return bookService.createBook(request);
     }
 
     @PutMapping("/{id}")
-    public BookDto updateBook(@PathVariable final Long id,
-                              @RequestParam final String title,
-                              @RequestParam final int pages) {
-        return bookService.updateBook(id, title, pages);
+    public BookDto updateBook(@PathVariable final Long id, @RequestBody final BookRequest request) {
+        return bookService.updateBook(id, request);
     }
 
     @DeleteMapping("/{id}")

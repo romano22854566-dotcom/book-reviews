@@ -1,6 +1,7 @@
 package com.example.bookreviews.service;
 
 import com.example.bookreviews.dto.AuthorDto;
+import com.example.bookreviews.dto.AuthorRequest;
 import com.example.bookreviews.mapper.AuthorMapper;
 import com.example.bookreviews.model.Author;
 import com.example.bookreviews.repository.AuthorRepository;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Service
 public class AuthorService {
+
     private final AuthorRepository authorRepository;
     private final AuthorMapper authorMapper;
 
@@ -19,12 +21,31 @@ public class AuthorService {
     }
 
     public List<AuthorDto> getAllAuthors() {
-        return authorRepository.findAll().stream().map(authorMapper::toDto).toList();
+        return authorRepository.findAll().stream()
+                .map(authorMapper::toDto)
+                .toList();
     }
 
-    public AuthorDto createAuthor(final String name) {
-        Author author = new Author(name);
-        return authorMapper.toDto(authorRepository.save(author));
+    public AuthorDto getAuthorById(final Long id) {
+        Author author = authorRepository.findWithDetailsById(id)
+                .orElseThrow(() -> new RuntimeException("Автор не найден с id: " + id));
+        return authorMapper.toDto(author);
+    }
+
+    public AuthorDto createAuthor(final AuthorRequest request) {
+        Author author = new Author(request.name());
+        Author savedAuthor = authorRepository.save(author);
+        return authorMapper.toDto(savedAuthor);
+    }
+
+    public AuthorDto updateAuthor(final Long id, final AuthorRequest request) {
+        Author author = authorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Автор не найден с id: " + id));
+
+        author.setName(request.name());
+        Author updatedAuthor = authorRepository.save(author);
+
+        return authorMapper.toDto(updatedAuthor);
     }
 
     public void deleteAuthor(final Long id) {

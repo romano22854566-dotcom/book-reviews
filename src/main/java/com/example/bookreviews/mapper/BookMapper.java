@@ -3,6 +3,7 @@ package com.example.bookreviews.mapper;
 import com.example.bookreviews.dto.BookDto;
 import com.example.bookreviews.model.Author;
 import com.example.bookreviews.model.Book;
+import com.example.bookreviews.model.Category;
 import com.example.bookreviews.model.Comment;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +16,11 @@ public final class BookMapper {
         List<String> authorNames = book.getAuthors().stream()
                 .map(Author::getName)
                 .toList();
-        
+
+        List<String> categoryNames = book.getCategories().stream()
+                .map(Category::getName)
+                .toList();
+
         List<String> commentTexts = book.getComments().stream()
                 .map(Comment::getText)
                 .toList();
@@ -24,7 +29,9 @@ public final class BookMapper {
                 book.getId(),
                 book.getTitle(),
                 book.getPages(),
+                book.getPublicationYear(),
                 authorNames,
+                categoryNames,
                 commentTexts
         );
     }
