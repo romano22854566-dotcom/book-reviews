@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PatchMapping;
 
 import java.util.List;
 
@@ -44,6 +45,12 @@ public final class BookController {
     public BookDto updateBook(@PathVariable final Long id, @RequestBody final BookRequest request) {
         return bookService.updateBook(id, request);
     }
+
+    @PatchMapping("/{id}")
+    public BookDto patchBook(@PathVariable final Long id, @RequestBody final BookRequest request) {
+        return bookService.patchBook(id, request);
+    }
+
 
     @DeleteMapping("/{id}")
     public String deleteBook(@PathVariable final Long id) {

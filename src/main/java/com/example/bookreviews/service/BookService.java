@@ -103,6 +103,43 @@ public class BookService {
         return bookMapper.toDto(updatedBook);
     }
 
+    @Transactional
+    public BookDto patchBook(final Long id, final BookRequest request) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Книга не найдена с id: " + id));
+
+        if (request.title() != null) {
+            book.setTitle(request.title());
+        }
+
+        if (request.pages() > 0) {
+            book.setPages(request.pages());
+        }
+
+        if (request.publicationYear() != null) {
+            book.setPublicationYear(request.publicationYear());
+        }
+
+        if (request.authorIds() != null) {
+            book.getAuthors().clear();
+            if (!request.authorIds().isEmpty()) {
+                List<Author> authors = authorRepository.findAllById(request.authorIds());
+                book.getAuthors().addAll(authors);
+            }
+        }
+
+        if (request.categoryIds() != null) {
+            book.getCategories().clear();
+            if (!request.categoryIds().isEmpty()) {
+                List<Category> categories = categoryRepository.findAllById(request.categoryIds());
+                book.getCategories().addAll(categories);
+            }
+        }
+
+        Book patchedBook = bookRepository.save(book);
+        return bookMapper.toDto(patchedBook);
+    }
+
     public void deleteBook(final Long id) {
         bookRepository.deleteById(id);
     }
