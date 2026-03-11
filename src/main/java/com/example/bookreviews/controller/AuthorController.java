@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/authors") // В Postman будет доступен по /api/authors
+@RequestMapping("/authors")
 public final class AuthorController {
 
     private final AuthorService authorService;

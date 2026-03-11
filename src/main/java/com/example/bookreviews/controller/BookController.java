@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import java.util.List;
 
 @RestController
-@RequestMapping("/books") // Не забывай, что в Postman из-за application.properties это будет /api/books
+@RequestMapping("/books")
 public final class BookController {
 
     private final BookService bookService;

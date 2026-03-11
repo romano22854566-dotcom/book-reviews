@@ -15,7 +15,6 @@ public final class AuthorMapper {
                 .map(Book::getTitle)
                 .toList();
 
-        // Теперь отдаем оба поля
         return new AuthorDto(author.getId(), author.getFirstName(), author.getLastName(), bookTitles);
     }
 }

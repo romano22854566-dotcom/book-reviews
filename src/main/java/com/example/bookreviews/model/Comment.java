@@ -24,11 +24,11 @@ public class Comment {
     @Column(nullable = false)
     private Integer rating;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Условие лабы сохранено!
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id")
     private Book book;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Условие лабы сохранено!
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
