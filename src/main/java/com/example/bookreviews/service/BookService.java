@@ -28,6 +28,7 @@ public class BookService {
     private final BookMapper bookMapper;
     private final AuthorRepository authorRepository;
     private final CategoryRepository categoryRepository;
+    private static final String BOOK_NOT_FOUND_MSG = "Книга не найдена с id: ";
 
     public BookService(final BookRepository bookRepository, final LogRepository logRepository,
                        final UserRepository userRepository, final BookMapper bookMapper,
@@ -52,7 +53,7 @@ public class BookService {
                 .orElseThrow(() -> {
                     User admin = userRepository.findById(1L).orElse(null);
                     logRepository.save(new Log(Status.FAILURE, "Неудачная попытка найти книгу: " + id, admin));
-                    return new IllegalStateException("Книга не найдена с id: " + id);
+                    return new IllegalStateException(BOOK_NOT_FOUND_MSG + id);
                 });
     }
 
@@ -81,7 +82,7 @@ public class BookService {
     @Transactional
     public BookDto updateBook(final Long id, final BookRequest request) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Книга не найдена с id: " + id));
+                .orElseThrow(() -> new RuntimeException(BOOK_NOT_FOUND_MSG + id));
 
         book.setTitle(request.title());
         book.setPages(request.pages());
@@ -106,7 +107,7 @@ public class BookService {
     @Transactional
     public BookDto patchBook(final Long id, final BookRequest request) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Книга не найдена с id: " + id));
+                .orElseThrow(() -> new RuntimeException(BOOK_NOT_FOUND_MSG + id));
 
         if (request.title() != null) {
             book.setTitle(request.title());
