@@ -18,23 +18,26 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String text;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Column(nullable = false)
+    private Integer rating;
+
+    @ManyToOne(fetch = FetchType.LAZY) // Условие лабы сохранено!
     @JoinColumn(name = "book_id")
     private Book book;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY) // Условие лабы сохранено!
     @JoinColumn(name = "user_id")
     private User user;
 
     public Comment() {
-
     }
 
-    public Comment(String text, Book book, User user) {
+    public Comment(String text, Integer rating, Book book, User user) {
         this.text = text;
+        this.rating = rating;
         this.book = book;
         this.user = user;
     }
@@ -53,6 +56,14 @@ public class Comment {
 
     public void setText(String text) {
         this.text = text;
+    }
+
+    public Integer getRating() {
+        return rating;
+    }
+
+    public void setRating(Integer rating) {
+        this.rating = rating;
     }
 
     public Book getBook() {

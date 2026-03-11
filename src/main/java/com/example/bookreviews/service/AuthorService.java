@@ -21,9 +21,7 @@ public class AuthorService {
     }
 
     public List<AuthorDto> getAllAuthors() {
-        return authorRepository.findAll().stream()
-                .map(authorMapper::toDto)
-                .toList();
+        return authorRepository.findAll().stream().map(authorMapper::toDto).toList();
     }
 
     public AuthorDto getAuthorById(final Long id) {
@@ -33,7 +31,8 @@ public class AuthorService {
     }
 
     public AuthorDto createAuthor(final AuthorRequest request) {
-        Author author = new Author(request.name());
+
+        Author author = new Author(request.firstName(), request.lastName());
         Author savedAuthor = authorRepository.save(author);
         return authorMapper.toDto(savedAuthor);
     }
@@ -42,9 +41,10 @@ public class AuthorService {
         Author author = authorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Автор не найден с id: " + id));
 
-        author.setName(request.name());
-        Author updatedAuthor = authorRepository.save(author);
+        author.setFirstName(request.firstName());
+        author.setLastName(request.lastName());
 
+        Author updatedAuthor = authorRepository.save(author);
         return authorMapper.toDto(updatedAuthor);
     }
 

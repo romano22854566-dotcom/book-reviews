@@ -1,7 +1,6 @@
 package com.example.bookreviews.mapper;
 
 import com.example.bookreviews.dto.BookDto;
-import com.example.bookreviews.model.Author;
 import com.example.bookreviews.model.Book;
 import com.example.bookreviews.model.Category;
 import com.example.bookreviews.model.Comment;
@@ -14,7 +13,7 @@ public final class BookMapper {
 
     public BookDto toDto(final Book book) {
         List<String> authorNames = book.getAuthors().stream()
-                .map(Author::getName)
+                .map(a -> a.getFirstName() + " " + a.getLastName())
                 .toList();
 
         List<String> categoryNames = book.getCategories().stream()

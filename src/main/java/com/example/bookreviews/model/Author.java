@@ -1,13 +1,6 @@
 package com.example.bookreviews.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
-
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,8 +12,11 @@ public class Author {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 100, nullable = false)
-    private String name;
+    @Column(name = "first_name", length = 50, nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name", length = 50, nullable = false)
+    private String lastName;
 
     @ManyToMany(mappedBy = "authors")
     private List<Book> books = new ArrayList<>();
@@ -29,9 +25,9 @@ public class Author {
 
     }
 
-    public Author(String name) {
-
-        this.name = name;
+    public Author(String firstName, String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 
     public Long getId() {
@@ -42,12 +38,20 @@ public class Author {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public List<Book> getBooks() {

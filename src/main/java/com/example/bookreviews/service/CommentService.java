@@ -44,10 +44,16 @@ public class CommentService {
     public CommentDto createComment(final CommentRequest request) {
         Book book = bookRepository.findById(request.bookId())
                 .orElseThrow(() -> new RuntimeException("Книга не найдена"));
+
         User user = userRepository.findById(request.userId())
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
 
-        Comment comment = new Comment(request.text(), book, user);
+        Integer rating = request.rating();
+        if (rating == null || rating < 1 || rating > 10) {
+            throw new IllegalArgumentException("Оценка должна быть от 1 до 10");
+        }
+
+        Comment comment = new Comment(request.text(), rating, book, user);
         Comment savedComment = commentRepository.save(comment);
 
         return commentMapper.toDto(savedComment);
@@ -58,7 +64,16 @@ public class CommentService {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Комментарий не найден с id: " + id));
 
-        comment.setText(request.text());
+        if (request.text() != null) {
+            comment.setText(request.text());
+        }
+
+        if (request.rating() != null) {
+            if (request.rating() < 1 || request.rating() > 10) {
+                throw new IllegalArgumentException("Оценка должна быть от 1 до 10");
+            }
+            comment.setRating(request.rating());
+        }
 
         Comment updatedComment = commentRepository.save(comment);
         return commentMapper.toDto(updatedComment);
