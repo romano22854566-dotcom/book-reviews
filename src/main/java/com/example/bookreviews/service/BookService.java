@@ -1,5 +1,7 @@
 package com.example.bookreviews.service;
 
+import com.example.bookreviews.cache.BookCacheKey;
+import com.example.bookreviews.cache.BookCacheManager;
 import com.example.bookreviews.dto.BookDto;
 import com.example.bookreviews.dto.BookRequest;
 import com.example.bookreviews.mapper.BookMapper;
@@ -14,6 +16,11 @@ import com.example.bookreviews.repository.BookRepository;
 import com.example.bookreviews.repository.CategoryRepository;
 import com.example.bookreviews.repository.LogRepository;
 import com.example.bookreviews.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,139 +29,212 @@ import java.util.List;
 @Service
 public class BookService {
 
+    private static final Logger LOG =
+            LoggerFactory.getLogger(BookService.class);
+    private static final String BOOK_NOT_FOUND_MSG =
+            "Книга не найдена с id: ";
+
     private final BookRepository bookRepository;
     private final LogRepository logRepository;
     private final UserRepository userRepository;
     private final BookMapper bookMapper;
     private final AuthorRepository authorRepository;
     private final CategoryRepository categoryRepository;
-    private static final String BOOK_NOT_FOUND_MSG = "Книга не найдена с id: ";
+    private final BookCacheManager bookCacheManager;
 
-    public BookService(final BookRepository bookRepository, final LogRepository logRepository,
-                       final UserRepository userRepository, final BookMapper bookMapper,
-                       final AuthorRepository authorRepository, final CategoryRepository categoryRepository) {
+    public BookService(final BookRepository bookRepository,
+                       final LogRepository logRepository,
+                       final UserRepository userRepository,
+                       final BookMapper bookMapper,
+                       final AuthorRepository authorRepository,
+                       final CategoryRepository categoryRepository,
+                       final BookCacheManager bookCacheManager) {
         this.bookRepository = bookRepository;
         this.logRepository = logRepository;
         this.userRepository = userRepository;
         this.bookMapper = bookMapper;
         this.authorRepository = authorRepository;
         this.categoryRepository = categoryRepository;
+        this.bookCacheManager = bookCacheManager;
     }
 
     public List<BookDto> findAllBooks(final String title) {
         List<Book> books = (title != null && !title.isEmpty())
                 ? bookRepository.findByTitleContainingIgnoreCase(title)
-                : bookRepository.findAll();
+                : bookRepository.findAllByOrderByIdAsc();
         return books.stream().map(bookMapper::toDto).toList();
     }
 
     public BookDto findBookById(final Long id) {
-        return bookRepository.findWithDetailsById(id).map(bookMapper::toDto)
+        return bookRepository.findWithDetailsById(id)
+                .map(bookMapper::toDto)
                 .orElseThrow(() -> {
-                    User admin = userRepository.findById(1L).orElse(null);
-                    logRepository.save(new Log(Status.FAILURE, "Неудачная попытка найти книгу: " + id, admin));
-                    return new IllegalStateException(BOOK_NOT_FOUND_MSG + id);
+                    User admin = userRepository.findById(1L)
+                            .orElse(null);
+                    logRepository.save(new Log(Status.FAILURE,
+                            "Неудачная попытка найти книгу: " + id,
+                            admin));
+                    return new IllegalStateException(
+                            BOOK_NOT_FOUND_MSG + id);
                 });
+    }
+
+    // ========== Лаб 3: фильтр ==========
+    @Transactional(readOnly = true)
+    public List<BookDto> findBooksByFilter(
+            final String authorLastName,
+            final String categoryName,
+            final Integer rating,
+            final int page,
+            final int size,
+            final boolean useNative) {
+
+        BookCacheKey cacheKey = new BookCacheKey(
+                authorLastName, categoryName, rating, page, size);
+
+        List<BookDto> cached = bookCacheManager.get(cacheKey);
+        if (cached != null) {
+            LOG.info("Возвращаем {} книг из кеша", cached.size());
+            return cached;
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        List<BookDto> result;
+
+        if (useNative) {
+            LOG.info("Используем NATIVE query (2 запроса: ID + Данные)");
+
+            // 1. Ищем ID
+            Page<Long> bookIdsPage = bookRepository.findBookIdsByFilterNative(
+                    authorLastName, categoryName, rating, pageable);
+
+            if (bookIdsPage.isEmpty()) {
+                return List.of();
+            }
+
+            // 2. Достаем полные книги
+            List<Book> books = bookRepository.findBooksWithDetailsByIds(
+                    bookIdsPage.getContent());
+            result = books.stream().map(bookMapper::toDto).toList();
+
+        } else {
+            LOG.info("Используем JPQL query (1 запрос)");
+
+            // Сразу достаем всё одним запросом
+            List<Book> books = bookRepository.findBooksByFilterJpql(
+                    authorLastName, categoryName, rating, pageable);
+            result = books.stream().map(bookMapper::toDto).toList();
+        }
+
+        bookCacheManager.put(cacheKey, result);
+        LOG.info("Найдено {} книг", result.size());
+
+        return result;
     }
 
     @Transactional
     public BookDto createBook(final BookRequest request) {
-        Book book = new Book(request.title(), request.pages(), request.publicationYear());
-
-        if (request.authorIds() != null && !request.authorIds().isEmpty()) {
-            List<Author> authors = authorRepository.findAllById(request.authorIds());
+        Book book = new Book(request.title(), request.pages(),
+                request.publicationYear());
+        if (request.authorIds() != null
+                && !request.authorIds().isEmpty()) {
+            List<Author> authors = authorRepository
+                    .findAllById(request.authorIds());
             book.getAuthors().addAll(authors);
         }
-
-        if (request.categoryIds() != null && !request.categoryIds().isEmpty()) {
-            List<Category> categories = categoryRepository.findAllById(request.categoryIds());
+        if (request.categoryIds() != null
+                && !request.categoryIds().isEmpty()) {
+            List<Category> categories = categoryRepository
+                    .findAllById(request.categoryIds());
             book.getCategories().addAll(categories);
         }
-
         Book savedBook = bookRepository.save(book);
-
         User admin = userRepository.findById(1L).orElse(null);
-        logRepository.save(new Log(Status.SUCCESS, "Успешно создана книга: " + request.title(), admin));
-
+        logRepository.save(new Log(Status.SUCCESS,
+                "Создана книга: " + request.title(), admin));
+        bookCacheManager.invalidate();
         return bookMapper.toDto(savedBook);
     }
 
     @Transactional
-    public BookDto updateBook(final Long id, final BookRequest request) {
+    public BookDto updateBook(final Long id,
+                              final BookRequest request) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(BOOK_NOT_FOUND_MSG + id));
-
+                .orElseThrow(() -> new RuntimeException(
+                        BOOK_NOT_FOUND_MSG + id));
         book.setTitle(request.title());
         book.setPages(request.pages());
         book.setPublicationYear(request.publicationYear());
-
         book.getAuthors().clear();
-        if (request.authorIds() != null && !request.authorIds().isEmpty()) {
-            List<Author> authors = authorRepository.findAllById(request.authorIds());
-            book.getAuthors().addAll(authors);
+        if (request.authorIds() != null
+                && !request.authorIds().isEmpty()) {
+            book.getAuthors().addAll(authorRepository
+                    .findAllById(request.authorIds()));
         }
-
         book.getCategories().clear();
-        if (request.categoryIds() != null && !request.categoryIds().isEmpty()) {
-            List<Category> categories = categoryRepository.findAllById(request.categoryIds());
-            book.getCategories().addAll(categories);
+        if (request.categoryIds() != null
+                && !request.categoryIds().isEmpty()) {
+            book.getCategories().addAll(categoryRepository
+                    .findAllById(request.categoryIds()));
         }
-
         Book updatedBook = bookRepository.save(book);
+        bookCacheManager.invalidate();
         return bookMapper.toDto(updatedBook);
     }
 
     @Transactional
-    public BookDto patchBook(final Long id, final BookRequest request) {
+    public BookDto patchBook(final Long id,
+                             final BookRequest request) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(BOOK_NOT_FOUND_MSG + id));
-
+                .orElseThrow(() -> new RuntimeException(
+                        BOOK_NOT_FOUND_MSG + id));
         if (request.title() != null) {
             book.setTitle(request.title());
         }
-
         if (request.pages() > 0) {
             book.setPages(request.pages());
         }
-
         if (request.publicationYear() != null) {
             book.setPublicationYear(request.publicationYear());
         }
-
         if (request.authorIds() != null) {
             book.getAuthors().clear();
             if (!request.authorIds().isEmpty()) {
-                List<Author> authors = authorRepository.findAllById(request.authorIds());
-                book.getAuthors().addAll(authors);
+                book.getAuthors().addAll(authorRepository
+                        .findAllById(request.authorIds()));
             }
         }
-
         if (request.categoryIds() != null) {
             book.getCategories().clear();
             if (!request.categoryIds().isEmpty()) {
-                List<Category> categories = categoryRepository.findAllById(request.categoryIds());
-                book.getCategories().addAll(categories);
+                book.getCategories().addAll(categoryRepository
+                        .findAllById(request.categoryIds()));
             }
         }
-
         Book patchedBook = bookRepository.save(book);
+        bookCacheManager.invalidate();
         return bookMapper.toDto(patchedBook);
     }
 
     public void deleteBook(final Long id) {
         bookRepository.deleteById(id);
+        bookCacheManager.invalidate();
     }
 
     public void demoWithoutTransaction() {
         User admin = userRepository.findById(1L).orElse(null);
-        logRepository.save(new Log(Status.IN_PROGRESS, "Попытка сохранить БЕЗ транзакции", admin));
-        throw new IllegalStateException("Искусственная ошибка БД!");
+        logRepository.save(new Log(Status.IN_PROGRESS,
+                "Попытка сохранить БЕЗ транзакции", admin));
+        throw new IllegalStateException(
+                "Искусственная ошибка БД!");
     }
 
     @Transactional
     public void demoWithTransaction() {
         User admin = userRepository.findById(1L).orElse(null);
-        logRepository.save(new Log(Status.IN_PROGRESS, "Попытка сохранить С транзакцией", admin));
-        throw new IllegalStateException("Искусственная ошибка БД!");
+        logRepository.save(new Log(Status.IN_PROGRESS,
+                "Попытка сохранить С транзакцией", admin));
+        throw new IllegalStateException(
+                "Искусственная ошибка БД!");
     }
 }

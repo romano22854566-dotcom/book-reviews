@@ -3,7 +3,6 @@ package com.example.bookreviews.mapper;
 import com.example.bookreviews.dto.BookDto;
 import com.example.bookreviews.model.Book;
 import com.example.bookreviews.model.Category;
-import com.example.bookreviews.model.Comment;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -21,7 +20,7 @@ public final class BookMapper {
                 .toList();
 
         List<String> commentTexts = book.getComments().stream()
-                .map(Comment::getText)
+                .map(c -> "[" + c.getRating() + "/10] " + c.getText())
                 .toList();
 
         return new BookDto(

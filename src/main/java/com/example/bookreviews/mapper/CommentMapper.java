@@ -11,7 +11,7 @@ public final class CommentMapper {
         return new CommentDto(
                 comment.getId(),
                 comment.getText(),
-                comment.getRating(), // Добавили маппинг оценки
+                comment.getRating(),
                 comment.getBook().getTitle(),
                 comment.getUser().getName()
         );

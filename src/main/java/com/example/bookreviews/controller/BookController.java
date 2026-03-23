@@ -5,6 +5,7 @@ import com.example.bookreviews.dto.BookRequest;
 import com.example.bookreviews.service.BookService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PatchMapping;
 
 import java.util.List;
 
@@ -27,8 +27,33 @@ public final class BookController {
     }
 
     @GetMapping
-    public List<BookDto> getAllBooks(@RequestParam(required = false) final String title) {
+    public List<BookDto> getAllBooks(
+            @RequestParam(required = false) final String title) {
         return bookService.findAllBooks(title);
+    }
+
+    // ========== Лаб 3: фильтр JPQL ==========
+    @GetMapping("/filter/jpql")
+    public List<BookDto> filterBooksJpql(
+            @RequestParam(required = false) final String authorLastName,
+            @RequestParam(required = false) final String categoryName,
+            @RequestParam(required = false) final Integer rating,
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "10") final int size) {
+        return bookService.findBooksByFilter(
+                authorLastName, categoryName, rating, page, size, false);
+    }
+
+    // ========== Лаб 3: фильтр NATIVE ==========
+    @GetMapping("/filter/native")
+    public List<BookDto> filterBooksNative(
+            @RequestParam(required = false) final String authorLastName,
+            @RequestParam(required = false) final String categoryName,
+            @RequestParam(required = false) final Integer rating,
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "10") final int size) {
+        return bookService.findBooksByFilter(
+                authorLastName, categoryName, rating, page, size, true);
     }
 
     @GetMapping("/{id}")
@@ -37,20 +62,24 @@ public final class BookController {
     }
 
     @PostMapping
-    public BookDto createBook(@RequestBody final BookRequest request) {
+    public BookDto createBook(
+            @RequestBody final BookRequest request) {
         return bookService.createBook(request);
     }
 
     @PutMapping("/{id}")
-    public BookDto updateBook(@PathVariable final Long id, @RequestBody final BookRequest request) {
+    public BookDto updateBook(
+            @PathVariable final Long id,
+            @RequestBody final BookRequest request) {
         return bookService.updateBook(id, request);
     }
 
     @PatchMapping("/{id}")
-    public BookDto patchBook(@PathVariable final Long id, @RequestBody final BookRequest request) {
+    public BookDto patchBook(
+            @PathVariable final Long id,
+            @RequestBody final BookRequest request) {
         return bookService.patchBook(id, request);
     }
-
 
     @DeleteMapping("/{id}")
     public String deleteBook(@PathVariable final Long id) {
@@ -63,7 +92,7 @@ public final class BookController {
         try {
             bookService.demoWithoutTransaction();
         } catch (Exception e) {
-            return "Ошибка! Но лог сохранен (частичное сохранение).";
+            return "Ошибка! Но лог сохранен.";
         }
         return "Успех";
     }
@@ -73,7 +102,7 @@ public final class BookController {
         try {
             bookService.demoWithTransaction();
         } catch (Exception e) {
-            return "Ошибка! Лог ОТКАТИЛСЯ (база чистая).";
+            return "Ошибка! Лог ОТКАТИЛСЯ.";
         }
         return "Успех";
     }
