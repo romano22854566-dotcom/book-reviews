@@ -79,7 +79,6 @@ public class BookService {
                 });
     }
 
-    // ========== Лаб 3: фильтр ==========
     @Transactional(readOnly = true)
     public List<BookDto> findBooksByFilter(
             final String authorLastName,
@@ -104,7 +103,6 @@ public class BookService {
         if (useNative) {
             LOG.info("Используем NATIVE query (2 запроса: ID + Данные)");
 
-            // 1. Ищем ID
             Page<Long> bookIdsPage = bookRepository.findBookIdsByFilterNative(
                     authorLastName, categoryName, rating, pageable);
 
@@ -112,7 +110,6 @@ public class BookService {
                 return List.of();
             }
 
-            // 2. Достаем полные книги
             List<Book> books = bookRepository.findBooksWithDetailsByIds(
                     bookIdsPage.getContent());
             result = books.stream().map(bookMapper::toDto).toList();
@@ -120,7 +117,6 @@ public class BookService {
         } else {
             LOG.info("Используем JPQL query (1 запрос)");
 
-            // Сразу достаем всё одним запросом
             List<Book> books = bookRepository.findBooksByFilterJpql(
                     authorLastName, categoryName, rating, pageable);
             result = books.stream().map(bookMapper::toDto).toList();

@@ -32,7 +32,6 @@ public final class BookController {
         return bookService.findAllBooks(title);
     }
 
-    // ========== Лаб 3: фильтр JPQL ==========
     @GetMapping("/filter/jpql")
     public List<BookDto> filterBooksJpql(
             @RequestParam(required = false) final String authorLastName,
@@ -44,7 +43,6 @@ public final class BookController {
                 authorLastName, categoryName, rating, page, size, false);
     }
 
-    // ========== Лаб 3: фильтр NATIVE ==========
     @GetMapping("/filter/native")
     public List<BookDto> filterBooksNative(
             @RequestParam(required = false) final String authorLastName,

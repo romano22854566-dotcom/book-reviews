@@ -27,7 +27,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     @EntityGraph(attributePaths = {"authors", "comments", "categories"})
     Optional<Book> findWithDetailsById(Long id);
 
-    // ============= Лаб 3: JPQL — 1 запрос =============
     @Query("SELECT DISTINCT b FROM Book b "
             + "LEFT JOIN FETCH b.authors "
             + "LEFT JOIN FETCH b.categories "
@@ -50,7 +49,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
             @Param("rating") Integer rating,
             Pageable pageable);
 
-    // ============= Лаб 3: NATIVE QUERY — 2 ЗАПРОСА (Сначала ищем ID) =============
     @Query(value = "SELECT DISTINCT b.id FROM books b "
             + "LEFT JOIN book_author ba ON b.id = ba.book_id "
             + "LEFT JOIN authors a ON ba.author_id = a.id "
@@ -77,7 +75,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
             @Param("rating") Integer rating,
             Pageable pageable);
 
-    // Вспомогательный запрос для Native (вытягивает все данные по найденным ID в 1 запрос)
     @EntityGraph(attributePaths = {"authors", "categories", "comments"})
     @Query("SELECT b FROM Book b WHERE b.id IN :ids ORDER BY b.id")
     List<Book> findBooksWithDetailsByIds(@Param("ids") List<Long> ids);
