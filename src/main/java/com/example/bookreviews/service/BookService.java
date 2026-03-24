@@ -18,11 +18,13 @@ import com.example.bookreviews.repository.LogRepository;
 import com.example.bookreviews.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.bookreviews.dto.BookFilterResult;
+import java.util.Arrays;
+import java.util.Collections;
 
 import java.util.List;
 
@@ -79,6 +81,7 @@ public class BookService {
                 });
     }
 
+    // ========== Лаб 3: фильтр ==========
     @Transactional(readOnly = true)
     public List<BookDto> findBooksByFilter(
             final String authorLastName,
@@ -101,18 +104,28 @@ public class BookService {
         List<BookDto> result;
 
         if (useNative) {
-            LOG.info("Используем NATIVE query (2 запроса: ID + Данные)");
-
-            Page<Long> bookIdsPage = bookRepository.findBookIdsByFilterNative(
+            LOG.info("Используем NATIVE query (Строго 1 SQL запрос)");
+            List<BookFilterResult> rawResults = bookRepository.findBooksByFilterNativeReal(
                     authorLastName, categoryName, rating, pageable);
+            result = rawResults.stream().map(row -> {
 
-            if (bookIdsPage.isEmpty()) {
-                return List.of();
-            }
+                List<String> authors = row.getAuthorNames() != null
+                        ? Arrays.asList(row.getAuthorNames().split("\\|"))
+                        : Collections.emptyList();
 
-            List<Book> books = bookRepository.findBooksWithDetailsByIds(
-                    bookIdsPage.getContent());
-            result = books.stream().map(bookMapper::toDto).toList();
+                List<String> categories = row.getCategoryNames() != null
+                        ? Arrays.asList(row.getCategoryNames().split("\\|"))
+                        : Collections.emptyList();
+
+                List<String> comments = row.getCommentTexts() != null
+                        ? Arrays.asList(row.getCommentTexts().split("\\|"))
+                        : Collections.emptyList();
+
+                return new BookDto(
+                        row.getId(), row.getTitle(), row.getPages(), row.getPublicationYear(),
+                        authors, categories, comments
+                );
+            }).toList();
 
         } else {
             LOG.info("Используем JPQL query (1 запрос)");
