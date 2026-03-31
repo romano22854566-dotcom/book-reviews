@@ -3,6 +3,7 @@ package com.example.bookreviews.service;
 import com.example.bookreviews.cache.BookCacheManager;
 import com.example.bookreviews.dto.CategoryDto;
 import com.example.bookreviews.dto.CategoryRequest;
+import com.example.bookreviews.exception.ResourceNotFoundException;
 import com.example.bookreviews.mapper.CategoryMapper;
 import com.example.bookreviews.model.Category;
 import com.example.bookreviews.repository.CategoryRepository;
@@ -17,9 +18,10 @@ public class CategoryService {
     private final CategoryMapper categoryMapper;
     private final BookCacheManager bookCacheManager;
 
-    public CategoryService(final CategoryRepository categoryRepository,
-                           final CategoryMapper categoryMapper,
-                           final BookCacheManager bookCacheManager) {
+    public CategoryService(
+            final CategoryRepository categoryRepository,
+            final CategoryMapper categoryMapper,
+            final BookCacheManager bookCacheManager) {
         this.categoryRepository = categoryRepository;
         this.categoryMapper = categoryMapper;
         this.bookCacheManager = bookCacheManager;
@@ -32,27 +34,28 @@ public class CategoryService {
 
     public CategoryDto getCategoryById(final Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Категория не найдена с id: " + id));
         return categoryMapper.toDto(category);
     }
 
-    public CategoryDto createCategory(final CategoryRequest request) {
+    public CategoryDto createCategory(
+            final CategoryRequest request) {
         Category category = new Category(request.name());
-        Category savedCategory = categoryRepository.save(category);
+        Category saved = categoryRepository.save(category);
         bookCacheManager.invalidate();
-        return categoryMapper.toDto(savedCategory);
+        return categoryMapper.toDto(saved);
     }
 
     public CategoryDto updateCategory(final Long id,
                                       final CategoryRequest request) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Категория не найдена с id: " + id));
         category.setName(request.name());
-        Category updatedCategory = categoryRepository.save(category);
+        Category updated = categoryRepository.save(category);
         bookCacheManager.invalidate();
-        return categoryMapper.toDto(updatedCategory);
+        return categoryMapper.toDto(updated);
     }
 
     public void deleteCategory(final Long id) {
