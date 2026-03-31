@@ -25,12 +25,13 @@ public class ServiceLoggingAspect {
         try {
             Object result = joinPoint.proceed();
             long elapsed = System.currentTimeMillis() - start;
-            LOG.info("<< Метод {} выполнен за {} мс", methodName, elapsed);
+            LOG.info("<< Метод {} выполнен за {} мс",
+                    methodName, elapsed);
             return result;
         } catch (Throwable ex) {
             long elapsed = System.currentTimeMillis() - start;
-            LOG.error("<< Метод {} завершился с ошибкой за {} мс: {}",
-                    methodName, elapsed, ex.getMessage());
+            LOG.info("<< Метод {} завершился с ошибкой за {} мс",
+                    methodName, elapsed);
             throw ex;
         }
     }
