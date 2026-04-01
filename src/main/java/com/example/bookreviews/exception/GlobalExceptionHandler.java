@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -81,5 +82,20 @@ public class GlobalExceptionHandler {
                 null);
         return new ResponseEntity<>(body,
                 HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            final MethodArgumentTypeMismatchException ex) {
+
+        LOG.warn("Ошибка конвертации типа (передан некорректный параметр): {}", ex.getMessage());
+
+        ErrorResponse body = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Некорректный параметр запроса. Ожидается число, а передана строка.",
+                LocalDateTime.now(),
+                null);
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 }

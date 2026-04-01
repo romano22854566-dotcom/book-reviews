@@ -30,7 +30,7 @@ public class ServiceLoggingAspect {
             return result;
         } catch (Throwable ex) {
             long elapsed = System.currentTimeMillis() - start;
-            LOG.info("<< Метод {} завершился с ошибкой за {} мс",
+            LOG.warn("<< Метод {} завершился с ошибкой за {} мс",
                     methodName, elapsed);
             throw ex;
         }
