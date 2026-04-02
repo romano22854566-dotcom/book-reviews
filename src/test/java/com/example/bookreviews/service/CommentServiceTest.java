@@ -74,6 +74,8 @@ class CommentServiceTest {
                 "Война и мир", "Иван");
     }
 
+    // ===== getAllComments =====
+
     @Test
     @DisplayName("getAllComments — возвращает список")
     void getAllComments_returnsAll() {
@@ -85,7 +87,6 @@ class CommentServiceTest {
         List<CommentDto> result =
                 commentService.getAllComments();
 
-        assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Отличная книга!",
                 result.get(0).text());
@@ -97,8 +98,11 @@ class CommentServiceTest {
         when(commentRepository.findAll())
                 .thenReturn(Collections.emptyList());
 
-        assertTrue(commentService.getAllComments().isEmpty());
+        assertTrue(
+                commentService.getAllComments().isEmpty());
     }
+
+    // ===== getCommentById =====
 
     @Test
     @DisplayName("getCommentById — успех")
@@ -125,8 +129,10 @@ class CommentServiceTest {
                 () -> commentService.getCommentById(99L));
     }
 
+    // ===== createComment =====
+
     @Test
-    @DisplayName("createComment — успешное создание")
+    @DisplayName("createComment — успех")
     void createComment_success() {
         CommentRequest request = new CommentRequest(
                 "Отличная книга!", 8, 1L, 1L);
@@ -144,12 +150,45 @@ class CommentServiceTest {
                 commentService.createComment(request);
 
         assertNotNull(result);
-        verify(commentRepository).save(any(Comment.class));
+        verify(commentRepository)
+                .save(any(Comment.class));
         verify(bookCacheManager).invalidate();
     }
 
     @Test
-    @DisplayName("bulk С транзакцией — успех (saveAll)")
+    @DisplayName("createComment — книга не найдена")
+    void createComment_bookNotFound() {
+        CommentRequest request = new CommentRequest(
+                "Текст", 5, 999L, 1L);
+
+        when(bookRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> commentService
+                        .createComment(request));
+    }
+
+    @Test
+    @DisplayName("createComment — пользователь не найден")
+    void createComment_userNotFound() {
+        CommentRequest request = new CommentRequest(
+                "Текст", 5, 1L, 999L);
+
+        when(bookRepository.findById(1L))
+                .thenReturn(Optional.of(testBook));
+        when(userRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> commentService
+                        .createComment(request));
+    }
+
+    // ===== createBulkComments =====
+
+    @Test
+    @DisplayName("bulk С транзакцией — успех")
     void createBulkComments_success() {
         CommentRequest req1 = new CommentRequest(
                 "Отлично!", 9, 1L, 1L);
@@ -170,7 +209,6 @@ class CommentServiceTest {
                 commentService.createBulkComments(
                         List.of(req1, req2));
 
-        assertNotNull(result);
         assertEquals(2, result.size());
         verify(commentRepository, times(1))
                 .saveAll(anyList());
@@ -178,7 +216,50 @@ class CommentServiceTest {
     }
 
     @Test
-    @DisplayName("bulk БЕЗ транзакции — ошибка во втором")
+    @DisplayName("bulk С транзакцией — книга не найдена")
+    void createBulkComments_bookNotFound() {
+        CommentRequest req = new CommentRequest(
+                "Текст", 5, 999L, 1L);
+
+        when(bookRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        List<CommentRequest> requests = List.of(req);
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> commentService
+                        .createBulkComments(requests));
+    }
+
+    // ===== createBulkCommentsNoTransaction =====
+
+    @Test
+    @DisplayName("bulk БЕЗ транзакции — успех")
+    void createBulkNoTx_success() {
+        CommentRequest req = new CommentRequest(
+                "Хорошо!", 7, 1L, 1L);
+
+        when(bookRepository.findById(1L))
+                .thenReturn(Optional.of(testBook));
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(testUser));
+        when(commentRepository.save(any(Comment.class)))
+                .thenReturn(testComment);
+        when(commentMapper.toDto(any(Comment.class)))
+                .thenReturn(testCommentDto);
+
+        List<CommentDto> result =
+                commentService
+                        .createBulkCommentsNoTransaction(
+                                List.of(req));
+
+        assertEquals(1, result.size());
+        verify(bookCacheManager).invalidate();
+    }
+
+    @Test
+    @DisplayName("bulk БЕЗ транзакции — частичное "
+            + "сохранение")
     void createBulkNoTx_partialSave() {
         CommentRequest req1 = new CommentRequest(
                 "Хорошо!", 7, 1L, 1L);
@@ -208,6 +289,8 @@ class CommentServiceTest {
                 .save(any(Comment.class));
     }
 
+    // ===== updateComment =====
+
     @Test
     @DisplayName("updateComment — успех")
     void updateComment_success() {
@@ -226,7 +309,6 @@ class CommentServiceTest {
         CommentDto result =
                 commentService.updateComment(1L, request);
 
-        assertNotNull(result);
         assertEquals("Обновленный", result.text());
         verify(bookCacheManager).invalidate();
     }
@@ -245,10 +327,13 @@ class CommentServiceTest {
                         .updateComment(99L, request));
     }
 
+    // ===== deleteComment =====
+
     @Test
     @DisplayName("deleteComment — успех")
     void deleteComment_success() {
-        doNothing().when(commentRepository).deleteById(1L);
+        doNothing().when(commentRepository)
+                .deleteById(1L);
 
         commentService.deleteComment(1L);
 
