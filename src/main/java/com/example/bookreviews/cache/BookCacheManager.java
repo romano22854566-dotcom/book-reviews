@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public final class BookCacheManager {
+public  class BookCacheManager {
 
     private static final Logger LOG =
             LoggerFactory.getLogger(BookCacheManager.class);

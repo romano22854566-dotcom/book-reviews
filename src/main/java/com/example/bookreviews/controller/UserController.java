@@ -21,7 +21,7 @@ import java.util.List;
 @RequestMapping("/users")
 @Tag(name = "Пользователи",
         description = "CRUD-операции с пользователями")
-public final class UserController {
+public  class UserController {
 
     private final UserService userService;
 

@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/books")
 @Tag(name = "Книги", description = "CRUD-операции с книгами")
-public final class BookController {
+public  class BookController {
 
     private final BookService bookService;
 

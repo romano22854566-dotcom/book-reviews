@@ -6,6 +6,8 @@ import com.example.bookreviews.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,14 +21,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/comments")
-@Tag(name = "Комментарии",
-        description = "CRUD-операции с комментариями")
-public final class CommentController {
+@Validated // ВАЖНО: Включает валидацию коллекций (List)
+@Tag(name = "Комментарии", description = "CRUD-операции с комментариями")
+public  class CommentController {
 
     private final CommentService commentService;
 
-    public CommentController(
-            final CommentService commentService) {
+    public CommentController(final CommentService commentService) {
         this.commentService = commentService;
     }
 
@@ -38,8 +39,7 @@ public final class CommentController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Получить комментарий по ID")
-    public CommentDto getCommentById(
-            @PathVariable final Long id) {
+    public CommentDto getCommentById(@PathVariable final Long id) {
         return commentService.getCommentById(id);
     }
 
@@ -48,6 +48,24 @@ public final class CommentController {
     public CommentDto createComment(
             @Valid @RequestBody final CommentRequest request) {
         return commentService.createComment(request);
+    }
+
+    @PostMapping("/bulk")
+    @Operation(summary = "Массовое создание (с транзакцией и saveAll)",
+            description = "Решает проблему N+1 и откатывает всё при ошибке.")
+    public List<CommentDto> createBulkComments(
+            @RequestBody @NotEmpty(message = "Список не может быть пустым")
+            final List<@Valid CommentRequest> requests) { // @Valid проверяет каждый элемент списка
+        return commentService.createBulkComments(requests);
+    }
+
+    @PostMapping("/bulk/no-transaction")
+    @Operation(summary = "Массовое создание (БЕЗ транзакции - Демонстрация)",
+            description = "Сохраняет по одному. Если падает, предыдущие остаются в БД.")
+    public List<CommentDto> createBulkCommentsNoTransaction(
+            @RequestBody @NotEmpty(message = "Список не может быть пустым")
+            final List<@Valid CommentRequest> requests) {
+        return commentService.createBulkCommentsNoTransaction(requests);
     }
 
     @PutMapping("/{id}")

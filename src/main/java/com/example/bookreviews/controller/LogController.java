@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/logs")
 @Tag(name = "Логи", description = "Просмотр логов операций")
-public final class LogController {
+public  class LogController {
 
     private final LogService logService;
 

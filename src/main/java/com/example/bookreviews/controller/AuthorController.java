@@ -20,7 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/authors")
 @Tag(name = "Авторы", description = "CRUD-операции с авторами")
-public final class AuthorController {
+public  class AuthorController {
 
     private final AuthorService authorService;
 

@@ -20,7 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/categories")
 @Tag(name = "Категории", description = "CRUD-операции с категориями")
-public final class CategoryController {
+public  class CategoryController {
 
     private final CategoryService categoryService;
 
