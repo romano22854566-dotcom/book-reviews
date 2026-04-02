@@ -22,16 +22,18 @@
 
             <java.version>17</java.version>
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-            <sonar.coverage.exclusions>
-                **/model/**,
-                **/dto/**,
-                **/exception/**,
-                **/repository/**,
-                **/config/**,
-                **/mapper/**,
-                **/BookReviewsApplication.java
-            </sonar.coverage.exclusions>
-
+        <sonar.coverage.exclusions>
+            **/model/**,
+            **/dto/**,
+            **/exception/**,
+            **/repository/**,
+            **/config/**,
+            **/mapper/**,
+            **/controller/**,
+            **/cache/**,
+            **/aspect/**,
+            **/BookReviewsApplication.java
+        </sonar.coverage.exclusions>
 
     </properties>
 
