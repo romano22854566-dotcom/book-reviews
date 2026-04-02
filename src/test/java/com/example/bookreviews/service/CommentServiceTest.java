@@ -20,13 +20,20 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CommentServiceTest {
@@ -58,32 +65,51 @@ class CommentServiceTest {
         testUser = new User("Иван", Role.USER);
         testUser.setId(1L);
 
-        testComment = new Comment("Отличная книга!", 8, testBook, testUser);
+        testComment = new Comment(
+                "Отличная книга!", 8, testBook, testUser);
         testComment.setId(1L);
 
-        testCommentDto = new CommentDto(1L, "Отличная книга!", 8, "Война и мир", "Иван");
+        testCommentDto = new CommentDto(
+                1L, "Отличная книга!", 8,
+                "Война и мир", "Иван");
     }
 
     @Test
     @DisplayName("getAllComments — возвращает список")
     void getAllComments_returnsAll() {
-        when(commentRepository.findAll()).thenReturn(List.of(testComment));
-        when(commentMapper.toDto(testComment)).thenReturn(testCommentDto);
+        when(commentRepository.findAll())
+                .thenReturn(List.of(testComment));
+        when(commentMapper.toDto(testComment))
+                .thenReturn(testCommentDto);
 
-        List<CommentDto> result = commentService.getAllComments();
+        List<CommentDto> result =
+                commentService.getAllComments();
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("Отличная книга!", result.get(0).text());
+        assertEquals("Отличная книга!",
+                result.get(0).text());
+    }
+
+    @Test
+    @DisplayName("getAllComments — пустой список")
+    void getAllComments_empty() {
+        when(commentRepository.findAll())
+                .thenReturn(Collections.emptyList());
+
+        assertTrue(commentService.getAllComments().isEmpty());
     }
 
     @Test
     @DisplayName("getCommentById — успех")
     void getCommentById_success() {
-        when(commentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(testComment));
-        when(commentMapper.toDto(testComment)).thenReturn(testCommentDto);
+        when(commentRepository.findWithDetailsById(1L))
+                .thenReturn(Optional.of(testComment));
+        when(commentMapper.toDto(testComment))
+                .thenReturn(testCommentDto);
 
-        CommentDto result = commentService.getCommentById(1L);
+        CommentDto result =
+                commentService.getCommentById(1L);
 
         assertNotNull(result);
         assertEquals(8, result.rating());
@@ -92,21 +118,30 @@ class CommentServiceTest {
     @Test
     @DisplayName("getCommentById — не найден")
     void getCommentById_notFound() {
-        when(commentRepository.findWithDetailsById(99L)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> commentService.getCommentById(99L));
+        when(commentRepository.findWithDetailsById(99L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> commentService.getCommentById(99L));
     }
 
     @Test
     @DisplayName("createComment — успешное создание")
     void createComment_success() {
-        CommentRequest request = new CommentRequest("Отличная книга!", 8, 1L, 1L);
+        CommentRequest request = new CommentRequest(
+                "Отличная книга!", 8, 1L, 1L);
 
-        when(bookRepository.findById(1L)).thenReturn(Optional.of(testBook));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(commentRepository.save(any(Comment.class))).thenReturn(testComment);
-        when(commentMapper.toDto(any(Comment.class))).thenReturn(testCommentDto);
+        when(bookRepository.findById(1L))
+                .thenReturn(Optional.of(testBook));
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(testUser));
+        when(commentRepository.save(any(Comment.class)))
+                .thenReturn(testComment);
+        when(commentMapper.toDto(any(Comment.class)))
+                .thenReturn(testCommentDto);
 
-        CommentDto result = commentService.createComment(request);
+        CommentDto result =
+                commentService.createComment(request);
 
         assertNotNull(result);
         verify(commentRepository).save(any(Comment.class));
@@ -114,58 +149,82 @@ class CommentServiceTest {
     }
 
     @Test
-    @DisplayName("bulk С транзакцией — успех (saveAll + N+1 Fix)")
+    @DisplayName("bulk С транзакцией — успех (saveAll)")
     void createBulkComments_success() {
-        CommentRequest req1 = new CommentRequest("Отлично!", 9, 1L, 1L);
-        CommentRequest req2 = new CommentRequest("Хорошо!", 7, 1L, 1L);
+        CommentRequest req1 = new CommentRequest(
+                "Отлично!", 9, 1L, 1L);
+        CommentRequest req2 = new CommentRequest(
+                "Хорошо!", 7, 1L, 1L);
 
-        // ВАЖНО: Мокаем findAllById, так как мы исправили проблему N+1
-        when(bookRepository.findAllById(anyList())).thenReturn(List.of(testBook));
-        when(userRepository.findAllById(anyList())).thenReturn(List.of(testUser));
+        when(bookRepository.findById(1L))
+                .thenReturn(Optional.of(testBook));
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(testUser));
+        when(commentRepository.saveAll(anyList()))
+                .thenReturn(
+                        List.of(testComment, testComment));
+        when(commentMapper.toDto(any(Comment.class)))
+                .thenReturn(testCommentDto);
 
-        when(commentRepository.saveAll(anyList())).thenReturn(List.of(testComment, testComment));
-        when(commentMapper.toDto(any(Comment.class))).thenReturn(testCommentDto);
-
-        List<CommentDto> result = commentService.createBulkComments(List.of(req1, req2));
+        List<CommentDto> result =
+                commentService.createBulkComments(
+                        List.of(req1, req2));
 
         assertNotNull(result);
         assertEquals(2, result.size());
-        verify(commentRepository, times(1)).saveAll(anyList()); // Вызван ровно 1 раз!
+        verify(commentRepository, times(1))
+                .saveAll(anyList());
         verify(bookCacheManager).invalidate();
     }
 
     @Test
-    @DisplayName("bulk БЕЗ транзакции — ошибка во втором, первый уже сохранён (Демонстрация)")
+    @DisplayName("bulk БЕЗ транзакции — ошибка во втором")
     void createBulkNoTx_partialSave() {
-        CommentRequest req1 = new CommentRequest("Хорошо!", 7, 1L, 1L);
-        CommentRequest req2 = new CommentRequest("Плохо!", 3, 999L, 1L);
+        CommentRequest req1 = new CommentRequest(
+                "Хорошо!", 7, 1L, 1L);
+        CommentRequest req2 = new CommentRequest(
+                "Плохо!", 3, 999L, 1L);
 
-        // Здесь мокаем обычный findById, так как этот метод работает без N+1 оптимизации (в цикле)
-        when(bookRepository.findById(1L)).thenReturn(Optional.of(testBook));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(bookRepository.findById(1L))
+                .thenReturn(Optional.of(testBook));
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(testUser));
+        when(commentRepository.save(any(Comment.class)))
+                .thenReturn(testComment);
+        when(commentMapper.toDto(any(Comment.class)))
+                .thenReturn(testCommentDto);
+        when(bookRepository.findById(999L))
+                .thenReturn(Optional.empty());
 
-        when(commentRepository.save(any(Comment.class))).thenReturn(testComment);
-        when(commentMapper.toDto(any(Comment.class))).thenReturn(testCommentDto);
-        when(bookRepository.findById(999L)).thenReturn(Optional.empty());
+        List<CommentRequest> requests =
+                List.of(req1, req2);
 
         assertThrows(ResourceNotFoundException.class,
-                () -> commentService.createBulkCommentsNoTransaction(List.of(req1, req2)));
+                () -> commentService
+                        .createBulkCommentsNoTransaction(
+                                requests));
 
-        // Убеждаемся, что первый коммент УСПЕЛ сохраниться в базу до ошибки во втором
-        verify(commentRepository, times(1)).save(any(Comment.class));
+        verify(commentRepository, times(1))
+                .save(any(Comment.class));
     }
 
     @Test
     @DisplayName("updateComment — успех")
     void updateComment_success() {
-        CommentRequest request = new CommentRequest("Обновленный", 9, 1L, 1L);
+        CommentRequest request = new CommentRequest(
+                "Обновленный", 9, 1L, 1L);
 
-        when(commentRepository.findById(1L)).thenReturn(Optional.of(testComment));
-        when(commentRepository.save(any(Comment.class))).thenReturn(testComment);
+        when(commentRepository.findById(1L))
+                .thenReturn(Optional.of(testComment));
+        when(commentRepository.save(any(Comment.class)))
+                .thenReturn(testComment);
         when(commentMapper.toDto(any(Comment.class)))
-                .thenReturn(new CommentDto(1L, "Обновленный", 9, "Война и мир", "Иван"));
+                .thenReturn(new CommentDto(
+                        1L, "Обновленный", 9,
+                        "Война и мир", "Иван"));
 
-        CommentDto result = commentService.updateComment(1L, request);
+        CommentDto result =
+                commentService.updateComment(1L, request);
 
         assertNotNull(result);
         assertEquals("Обновленный", result.text());
@@ -173,10 +232,26 @@ class CommentServiceTest {
     }
 
     @Test
+    @DisplayName("updateComment — не найден")
+    void updateComment_notFound() {
+        CommentRequest request = new CommentRequest(
+                "Текст", 5, 1L, 1L);
+
+        when(commentRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> commentService
+                        .updateComment(99L, request));
+    }
+
+    @Test
     @DisplayName("deleteComment — успех")
     void deleteComment_success() {
         doNothing().when(commentRepository).deleteById(1L);
+
         commentService.deleteComment(1L);
+
         verify(commentRepository).deleteById(1L);
         verify(bookCacheManager).invalidate();
     }

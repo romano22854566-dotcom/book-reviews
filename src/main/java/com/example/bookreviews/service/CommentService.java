@@ -17,14 +17,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class CommentService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CommentService.class);
+    private static final Logger LOG =
+            LoggerFactory.getLogger(CommentService.class);
+
+    private static final String BOOK_NOT_FOUND_MSG =
+            "Книга не найдена с id: ";
+    private static final String USER_NOT_FOUND_MSG =
+            "Пользователь не найден с id: ";
+    private static final String COMMENT_NOT_FOUND_MSG =
+            "Комментарий не найден с id: ";
 
     private final CommentRepository commentRepository;
     private final BookRepository bookRepository;
@@ -51,79 +56,73 @@ public class CommentService {
     }
 
     public CommentDto getCommentById(final Long id) {
-        Comment comment = commentRepository.findWithDetailsById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Комментарий не найден с id: " + id));
+        Comment comment = commentRepository
+                .findWithDetailsById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                COMMENT_NOT_FOUND_MSG + id));
         return commentMapper.toDto(comment);
     }
 
     @Transactional
-    public CommentDto createComment(final CommentRequest request) {
-        Book book = bookRepository.findById(request.bookId())
-                .orElseThrow(() -> new ResourceNotFoundException("Книга не найдена с id: " + request.bookId()));
-        User user = userRepository.findById(request.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден с id: " + request.userId()));
-
-        Comment comment = new Comment(request.text(), request.rating(), book, user);
+    public CommentDto createComment(
+            final CommentRequest request) {
+        Comment comment = mapToEntity(request);
         Comment saved = commentRepository.save(comment);
         bookCacheManager.invalidate();
         return commentMapper.toDto(saved);
     }
 
     @Transactional
-    public List<CommentDto> createBulkComments(final List<CommentRequest> requests) {
-        LOG.info("Bulk-создание {} комментариев С транзакцией (Идеально решен N+1)", requests.size());
+    public List<CommentDto> createBulkComments(
+            final List<CommentRequest> requests) {
+        LOG.info("Bulk-создание {} комментариев "
+                        + "С транзакцией (saveAll)",
+                requests.size());
 
-        // 1. Вытаскиваем все ID
-        List<Long> bookIds = requests.stream().map(CommentRequest::bookId).distinct().toList();
-        List<Long> userIds = requests.stream().map(CommentRequest::userId).distinct().toList();
+        List<Comment> commentsToSave = requests.stream()
+                .map(this::mapToEntity)
+                .toList();
 
-        // 2. Делаем ровно ДВА запроса в БД (Вместо 2*N)
-        Map<Long, Book> booksMap = bookRepository.findAllById(bookIds).stream()
-                .collect(Collectors.toMap(Book::getId, b -> b));
-        Map<Long, User> usersMap = userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(User::getId, u -> u));
-
-        // 3. Формируем сущности в памяти
-        List<Comment> commentsToSave = requests.stream().map(req -> {
-            Book book = Optional.ofNullable(booksMap.get(req.bookId()))
-                    .orElseThrow(() -> new ResourceNotFoundException("Книга не найдена с id: " + req.bookId()));
-            User user = Optional.ofNullable(usersMap.get(req.userId()))
-                    .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден с id: " + req.userId()));
-            return new Comment(req.text(), req.rating(), book, user);
-        }).toList();
-
-        // 4. Сохраняем ОДНИМ запросом (Batch Insert)
-        List<Comment> saved = commentRepository.saveAll(commentsToSave);
+        List<Comment> savedComments =
+                commentRepository.saveAll(commentsToSave);
         bookCacheManager.invalidate();
+        LOG.info("Успешно сохранено {} комментариев",
+                savedComments.size());
 
-        return saved.stream().map(commentMapper::toDto).toList();
+        return savedComments.stream()
+                .map(commentMapper::toDto)
+                .toList();
     }
 
-    public List<CommentDto> createBulkCommentsNoTransaction(final List<CommentRequest> requests) {
-        LOG.info("Bulk-создание {} комментариев БЕЗ транзакции (Демонстрация)", requests.size());
+    public List<CommentDto> createBulkCommentsNoTransaction(
+            final List<CommentRequest> requests) {
+        LOG.info("Bulk-создание {} комментариев "
+                        + "БЕЗ транзакции",
+                requests.size());
 
-        // Здесь мы намеренно обрабатываем по-одному (без оптимизации N+1),
-        // чтобы при падении 2-го элемента, 1-й УЖЕ лежал в базе данных.
-        List<CommentDto> result = requests.stream().map(req -> {
-            Book book = bookRepository.findById(req.bookId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Книга не найдена с id: " + req.bookId()));
-            User user = userRepository.findById(req.userId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден с id: " + req.userId()));
-
-            Comment comment = new Comment(req.text(), req.rating(), book, user);
-            Comment saved = commentRepository.save(comment); // Сохранение сразу в цикле!
-            LOG.debug("Сохранён комментарий id={}", saved.getId());
-            return commentMapper.toDto(saved);
-        }).toList();
+        List<CommentDto> result = requests.stream()
+                .map(req -> {
+                    Comment comment = mapToEntity(req);
+                    Comment saved =
+                            commentRepository.save(comment);
+                    LOG.debug("Сохранён комментарий id={}",
+                            saved.getId());
+                    return commentMapper.toDto(saved);
+                })
+                .toList();
 
         bookCacheManager.invalidate();
         return result;
     }
 
     @Transactional
-    public CommentDto updateComment(final Long id, final CommentRequest request) {
+    public CommentDto updateComment(final Long id,
+                                    final CommentRequest request) {
         Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Комментарий не найден с id: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                COMMENT_NOT_FOUND_MSG + id));
 
         comment.setText(request.text());
         comment.setRating(request.rating());
@@ -136,5 +135,25 @@ public class CommentService {
     public void deleteComment(final Long id) {
         commentRepository.deleteById(id);
         bookCacheManager.invalidate();
+    }
+
+    private Comment mapToEntity(
+            final CommentRequest request) {
+        Book book = bookRepository
+                .findById(request.bookId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                BOOK_NOT_FOUND_MSG
+                                        + request.bookId()));
+
+        User user = userRepository
+                .findById(request.userId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                USER_NOT_FOUND_MSG
+                                        + request.userId()));
+
+        return new Comment(request.text(),
+                request.rating(), book, user);
     }
 }
