@@ -74,8 +74,6 @@ class CommentServiceTest {
                 "Война и мир", "Иван");
     }
 
-    // ===== getAllComments =====
-
     @Test
     @DisplayName("getAllComments — возвращает список")
     void getAllComments_returnsAll() {
@@ -102,8 +100,6 @@ class CommentServiceTest {
                 commentService.getAllComments().isEmpty());
     }
 
-    // ===== getCommentById =====
-
     @Test
     @DisplayName("getCommentById — успех")
     void getCommentById_success() {
@@ -128,8 +124,6 @@ class CommentServiceTest {
         assertThrows(ResourceNotFoundException.class,
                 () -> commentService.getCommentById(99L));
     }
-
-    // ===== createComment =====
 
     @Test
     @DisplayName("createComment — успех")
@@ -185,8 +179,6 @@ class CommentServiceTest {
                         .createComment(request));
     }
 
-    // ===== createBulkComments =====
-
     @Test
     @DisplayName("bulk С транзакцией — успех")
     void createBulkComments_success() {
@@ -230,8 +222,6 @@ class CommentServiceTest {
                 () -> commentService
                         .createBulkComments(requests));
     }
-
-    // ===== createBulkCommentsNoTransaction =====
 
     @Test
     @DisplayName("bulk БЕЗ транзакции — успех")
@@ -289,8 +279,6 @@ class CommentServiceTest {
                 .save(any(Comment.class));
     }
 
-    // ===== updateComment =====
-
     @Test
     @DisplayName("updateComment — успех")
     void updateComment_success() {
@@ -327,7 +315,6 @@ class CommentServiceTest {
                         .updateComment(99L, request));
     }
 
-    // ===== deleteComment =====
 
     @Test
     @DisplayName("deleteComment — успех")

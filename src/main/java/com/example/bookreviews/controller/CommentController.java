@@ -21,7 +21,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/comments")
-@Validated // ВАЖНО: Включает валидацию коллекций (List)
+@Validated
 @Tag(name = "Комментарии", description = "CRUD-операции с комментариями")
 public  class CommentController {
 
@@ -55,7 +55,7 @@ public  class CommentController {
             description = "Решает проблему N+1 и откатывает всё при ошибке.")
     public List<CommentDto> createBulkComments(
             @RequestBody @NotEmpty(message = "Список не может быть пустым")
-            final List<@Valid CommentRequest> requests) { // @Valid проверяет каждый элемент списка
+            final List<@Valid CommentRequest> requests) {
         return commentService.createBulkComments(requests);
     }
 
