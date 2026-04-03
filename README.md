@@ -21,4 +21,4 @@
 * Frontend - ещё не выбран
 * Базы данных - PostgreSQL
 * Сборка - Maven
-### Ссылка на результат SonarQube Cloud [тут](https://sonarcloud.io/summary/overall?id=romano22854566-dotcom_book-reviews&branch=main)
+### Ссылка на результат SonarQube Cloud [тут](https://sonarcloud.io/project/overview?id=petkunindustries_book-reviews)
