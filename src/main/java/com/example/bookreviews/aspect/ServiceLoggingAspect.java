@@ -14,9 +14,9 @@ public class ServiceLoggingAspect {
     private static final Logger LOG =
             LoggerFactory.getLogger(ServiceLoggingAspect.class);
 
-    @Around("execution(* com.example.bookreviews.service.*.*(..))")
-    public Object logExecutionTime(
-            final ProceedingJoinPoint joinPoint) throws Throwable {
+    @Around("execution(* com.example.bookreviews.service.*.*(..)) "
+            + "&& !execution(* com.example.bookreviews.service.ConcurrencyService.*(..))")
+    public Object logExecutionTime(final ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().toShortString();
         long start = System.currentTimeMillis();
 
