@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/lab")
 @Tag(name = "Асинхронность и Многопоточность")
 public class LabController {
-
+    private static final String TASK_ID_KEY = "ID Задачи";
     private static final int THREAD_COUNT = 50;
     private static final int ITERATION_COUNT = 10000;
     private static final int AWAIT_TIMEOUT_SECONDS = 20;
@@ -44,19 +44,19 @@ public class LabController {
         // 2. ВЫЗЫВАЕМ АСИНХРОННЫЙ МЕТОД СНАРУЖИ (теперь Postman вернет ответ за 0.01 сек!)
         asyncService.processRealReportAsync(taskId);
 
-        return Map.of("ID Задачи", taskId, "Сообщение", "Отчет генерируется в фоне. Проверьте через пару секунд.");
+        return Map.of(TASK_ID_KEY, taskId, "Сообщение", "Отчет генерируется в фоне. Проверьте через пару секунд.");
     }
 
     @GetMapping("/async/status/{id}")
     @Operation(summary = "Проверить статус задачи")
     public Map<String, String> checkStatus(@PathVariable String id) {
-        return Map.of("ID Задачи", id, "Статус", asyncService.getStatus(id));
+        return Map.of(TASK_ID_KEY, id, "Статус", asyncService.getStatus(id));
     }
 
     @GetMapping("/async/result/{id}")
     @Operation(summary = "Получить готовый отчет")
     public Map<String, String> getResult(@PathVariable String id) {
-        return Map.of("ID Задачи", id, "Результат", asyncService.getResult(id));
+        return Map.of(TASK_ID_KEY, id, "Результат", asyncService.getResult(id));
     }
 
 
