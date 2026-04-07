@@ -38,10 +38,8 @@ public class LabController {
     public Map<String, String> startAsync() {
         String taskId = UUID.randomUUID().toString();
 
-        // 1. Инициализируем статус
         asyncService.initTask(taskId);
 
-        // 2. ВЫЗЫВАЕМ АСИНХРОННЫЙ МЕТОД СНАРУЖИ (теперь Postman вернет ответ за 0.01 сек!)
         asyncService.processRealReportAsync(taskId);
 
         return Map.of(TASK_ID_KEY, taskId, "Сообщение", "Отчет генерируется в фоне. Проверьте через пару секунд.");
@@ -58,9 +56,6 @@ public class LabController {
     public Map<String, String> getResult(@PathVariable String id) {
         return Map.of(TASK_ID_KEY, id, "Результат", asyncService.getResult(id));
     }
-
-
-    // --- ЭНДПОИНТ ДЛЯ ПУНКТОВ 2 и 3 (Race Condition) ---
 
     @PostMapping("/concurrency/test")
     @Operation(summary = "Демонстрация Race Condition (50 потоков)")
@@ -82,11 +77,9 @@ public class LabController {
 
         executor.shutdown();
 
-
-        // Решение ошибки: проверяем результат awaitTermination
         boolean terminated = executor.awaitTermination(AWAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         if (!terminated) {
-            executor.shutdownNow(); // Принудительно завершаем, если не успели
+            executor.shutdownNow();
         }
 
         int expected = THREAD_COUNT * ITERATION_COUNT;

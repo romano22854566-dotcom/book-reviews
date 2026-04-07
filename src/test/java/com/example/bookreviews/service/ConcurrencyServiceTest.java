@@ -42,15 +42,12 @@ class ConcurrencyServiceTest {
     @Test
     @DisplayName("Тест сброса всех счетчиков")
     void testResetCounters() {
-        // Накручиваем значения
         concurrencyService.incrementUnsafe();
         concurrencyService.incrementSync();
         concurrencyService.incrementAtomic();
 
-        // Сбрасываем
         concurrencyService.resetCounters();
 
-        // Проверяем, что везде нули
         assertEquals(0, concurrencyService.getUnsafeCounter());
         assertEquals(0, concurrencyService.getSyncCounter());
         assertEquals(0, concurrencyService.getAtomicCounter());

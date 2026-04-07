@@ -46,21 +46,16 @@ class AsyncReportServiceTest {
     void testProcessRealReportAsync_Success() throws ExecutionException, InterruptedException {
         String taskId = "test-task-2";
 
-        // Настраиваем моки (возвращаем фиктивные данные)
         when(bookRepository.count()).thenReturn(15L);
         when(commentRepository.count()).thenReturn(30L);
         when(userRepository.count()).thenReturn(5L);
 
-        // Инициализируем
         asyncReportService.initTask(taskId);
 
-        // Запускаем метод
         CompletableFuture<String> future = asyncReportService.processRealReportAsync(taskId);
 
-        // Ждем результат
         String result = future.get();
 
-        // Проверяем
         assertTrue(result.contains("Книг - 15"));
         assertTrue(result.contains("Комментариев - 30"));
         assertTrue(result.contains("Пользователей - 5"));
@@ -74,16 +69,12 @@ class AsyncReportServiceTest {
     void testProcessRealReportAsync_Exception() {
         String taskId = "test-task-3";
 
-        // Настраиваем мок так, чтобы он выбросил ошибку
         when(bookRepository.count()).thenThrow(new RuntimeException("БД упала"));
 
-        // Запускаем метод
         CompletableFuture<String> future = asyncReportService.processRealReportAsync(taskId);
 
-        // Проверяем, что future завершился с ошибкой
         assertTrue(future.isCompletedExceptionally());
 
-        // Проверяем, что статус изменился на "Ошибка"
         assertEquals("Ошибка", asyncReportService.getStatus(taskId));
     }
 
@@ -92,5 +83,24 @@ class AsyncReportServiceTest {
     void testMissingTask() {
         assertEquals("Задача не найдена", asyncReportService.getStatus("unknown-id"));
         assertEquals("Результат еще не готов", asyncReportService.getResult("unknown-id"));
+    }
+    @Test
+    @DisplayName("Тест прерывания потока (InterruptedException)")
+    void testProcessRealReportAsync_InterruptedException() throws InterruptedException {
+        String taskId = "interrupt-task";
+
+        Thread thread = new Thread(() -> {
+            asyncReportService.processRealReportAsync(taskId);
+        });
+
+        thread.start();
+
+        Thread.sleep(100);
+
+        thread.interrupt();
+
+        thread.join();
+
+        assertEquals("Прервано", asyncReportService.getStatus(taskId));
     }
 }

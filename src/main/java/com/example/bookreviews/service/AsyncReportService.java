@@ -17,7 +17,6 @@ public class AsyncReportService {
 
     private static final Logger LOG = LoggerFactory.getLogger(AsyncReportService.class);
 
-    // Решение проблемы Magic Number: выносим 10000 мс в константу
     private static final int SIMULATION_DELAY_MS = 10000;
 
     private final Map<String, String> taskStatuses = new ConcurrentHashMap<>();
@@ -27,7 +26,6 @@ public class AsyncReportService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
-    // Решение проблемы длины строки: переносим параметры на новые строки
     public AsyncReportService(
             final BookRepository bookRepository,
             final CommentRepository commentRepository,
@@ -45,7 +43,6 @@ public class AsyncReportService {
     public CompletableFuture<String> processRealReportAsync(String taskId) {
         LOG.info("Сбор аналитики начался в фоне (Task ID: {})", taskId);
         try {
-            // Используем константу вместо числа 10000
             Thread.sleep(SIMULATION_DELAY_MS);
 
             long booksCount = bookRepository.count();
@@ -63,7 +60,6 @@ public class AsyncReportService {
 
             return CompletableFuture.completedFuture(result);
         } catch (InterruptedException e) {
-            // Восстанавливаем interrupted status по правилам хорошего тона в Java
             Thread.currentThread().interrupt();
             taskStatuses.put(taskId, "Прервано");
             return CompletableFuture.failedFuture(e);
