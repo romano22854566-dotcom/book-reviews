@@ -89,13 +89,9 @@ class AsyncReportServiceTest {
     void testProcessRealReportAsync_InterruptedException() throws InterruptedException {
         String taskId = "interrupt-task";
 
-        Thread thread = new Thread(() -> {
-            asyncReportService.processRealReportAsync(taskId);
-        });
+        Thread thread = new Thread(() -> asyncReportService.processRealReportAsync(taskId));
 
         thread.start();
-
-        Thread.sleep(100);
 
         thread.interrupt();
 
